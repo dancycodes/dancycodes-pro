@@ -1,0 +1,16 @@
+{
+  "name": "dancycodes-pro-marketplace",
+  "owner": {
+    "name": "DancyCodes",
+    "email": "dancycodes@gmail.com",
+    "url": "https://dancycodes.com"
+  },
+  "description": "DancyCodes Pro — spec-driven software delivery plugins for Claude Code",
+  "plugins": [
+    {
+      "name": "dancycodes-pro",
+      "description": "Spec-driven software delivery: interview, decomposition, implementation orchestration, QA, and completion. Powered by the DancyCodes remote methodology engine.",
+      "source": "./plugin"
+    }
+  ]
+}

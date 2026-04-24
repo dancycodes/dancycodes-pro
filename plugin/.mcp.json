@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "dd-manager-proxy": {
+      "command": "npx",
+      "args": ["-y", "@dancycodesorg/dd-manager-proxy"],
+      "env": {
+        "DD_DIR": ".executor",
+        "DANCYCODES_LICENSE_KEY": "${user_config.license_key}",
+        "DANCYCODES_ENGINE_URL": "${user_config.engine_url}"
+      }
+    }
+  }
+}

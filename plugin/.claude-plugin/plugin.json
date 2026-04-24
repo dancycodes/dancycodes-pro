@@ -1,0 +1,27 @@
+{
+  "name": "dancycodes-pro",
+  "version": "0.1.0",
+  "description": "Spec-driven software delivery for Claude Code — interview → spec → implementation → QA → completion. Powered by the DancyCodes remote methodology engine.",
+  "author": {
+    "name": "DancyCodes",
+    "email": "dancycodes@gmail.com",
+    "url": "https://dancycodes.com"
+  },
+  "homepage": "https://dancycodes.com",
+  "license": "Proprietary — DancyCodes Pro License. Not for redistribution.",
+  "userConfig": {
+    "license_key": {
+      "type": "string",
+      "title": "DancyCodes Pro License Key",
+      "description": "Your license key. Get a free beta key by emailing dancycodes@gmail.com. Format: DCP-XXXXXXXX-XXXXXXXX",
+      "sensitive": true,
+      "required": true
+    },
+    "engine_url": {
+      "type": "string",
+      "title": "Engine URL (advanced)",
+      "description": "DancyCodes engine endpoint. Leave as default unless instructed otherwise.",
+      "default": "https://dancycodes-engine.dancycodes.workers.dev/mcp"
+    }
+  }
+}

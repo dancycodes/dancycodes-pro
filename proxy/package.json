@@ -1,0 +1,67 @@
+{
+  "name": "@dancycodesorg/dd-manager-proxy",
+  "version": "0.1.0",
+  "description": "DancyCodes Pro local MCP proxy — hosts SQLite project state locally and forwards proprietary logic calls to the DancyCodes engine. Installed automatically by the dancycodes-pro Claude Code plugin.",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "dd-manager-proxy": "./bin/dd-manager-proxy.js"
+  },
+  "files": [
+    "build/",
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude-code",
+    "dancycodes",
+    "sqlite",
+    "spec-driven-development",
+    "project-management",
+    "ai-agent"
+  ],
+  "homepage": "https://dancycodes.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dancycodes/dancycodes-pro",
+    "directory": "proxy"
+  },
+  "bugs": {
+    "url": "https://github.com/dancycodes/dancycodes-pro/issues",
+    "email": "dancycodes@gmail.com"
+  },
+  "author": {
+    "name": "DancyCodes",
+    "email": "dancycodes@gmail.com",
+    "url": "https://dancycodes.com"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "better-sqlite3": "^12.6.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

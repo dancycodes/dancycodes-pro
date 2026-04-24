@@ -1,0 +1,41 @@
+DancyCodes Pro License Agreement — dd-manager-proxy
+Version 0.1 — 2026-04
+
+Copyright (c) DancyCodes. All rights reserved.
+
+This package ("the Software") is the local MCP proxy component of DancyCodes Pro,
+a proprietary spec-driven software delivery system. By installing, copying, or using
+the Software, you agree to the following terms.
+
+1. LICENSE GRANT. DancyCodes grants you a non-transferable, non-exclusive, revocable
+   license to use the Software as part of the DancyCodes Pro Claude Code plugin, for
+   your own personal and commercial software development projects.
+
+2. LICENSE KEY REQUIRED. Operation requires a valid DANCYCODES_LICENSE_KEY obtained
+   from DancyCodes. The Software will not start without one. Bypassing, tampering
+   with, or forging the license validation is prohibited.
+
+3. NO REDISTRIBUTION. You may not redistribute, sublicense, rent, lease, or sell
+   the Software or any response data received from the DancyCodes engine.
+
+4. NO REVERSE ENGINEERING. You agree not to reverse-engineer, decompile, or attempt
+   to derive the proprietary methodology, algorithms, or prompts served by the
+   DancyCodes engine through this proxy.
+
+5. TELEMETRY. The DancyCodes engine collects anonymous usage telemetry (license key,
+   tool name, timestamp, session hash) to detect abuse and improve the service.
+   No project content, code, or user data is collected.
+
+6. LICENSE REVOCATION. DancyCodes may revoke your license at any time if you violate
+   these terms.
+
+7. NO WARRANTY. THE SOFTWARE IS PROVIDED "AS IS". DancyCodes disclaims all warranties,
+   express or implied.
+
+8. LIMITATION OF LIABILITY. In no event shall DancyCodes be liable for any damages
+   arising from your use of the Software.
+
+9. TERMINATION. This license terminates automatically if you fail to comply with
+   any term.
+
+Contact: dancycodes@gmail.com
