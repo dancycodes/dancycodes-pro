@@ -15,6 +15,34 @@ generation, implementation, QA, and completion. All proprietary methodology is
 delivered on-demand from the DancyCodes engine — this local skill is just a thin
 router.
 
+---
+
+## ⚠️ BEFORE FIRST USE — License Key Setup
+
+DancyCodes Pro requires a license key. **If `/mcp` shows `dd-manager-proxy` as `failed`, the key is not configured.**
+
+### How to fix in 30 seconds:
+
+1. **Check your key** — should be in the format `DCP-XXXXXXXX-XXXXXXXXXXXXXXXX`. Don't have one yet? Email **dancycodes@gmail.com** for a free beta license, or visit **https://dancycodes.com**.
+
+2. **Configure the key** (if Claude Code didn't auto-prompt during `/plugin install`):
+   ```
+   /plugin config dancycodes-pro-marketplace/dancycodes-pro
+   ```
+   Paste your key when prompted.
+
+3. **Restart Claude Code** (close + reopen). The MCP server reads the env var at startup.
+
+4. **Verify**: run `/mcp`. `dd-manager-proxy` should show `connected`. If it still shows `failed`, run this in your terminal for a clearer error:
+   ```bash
+   DANCYCODES_LICENSE_KEY=YOUR-KEY-HERE npx -y @dancycodesorg/dd-manager-proxy
+   ```
+   The stderr output tells you exactly which mode failed (no key set, malformed, or rejected by engine).
+
+If the user mentions any of the above symptoms — `/mcp failed`, "MCP not connected", "license key not configured" — STOP and walk them through these 4 steps before doing anything else. **Do not attempt the spec or implementation workflow without a connected MCP**, because none of the proprietary tools (`dc_load_phase`, `next_task`, `recover`, etc.) will work.
+
+---
+
 ## Required Dependencies
 
 Verify these are installed before proceeding. If any are missing, stop and ask the user

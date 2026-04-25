@@ -19,3 +19,8 @@ docs/progress.md
 # CRITICAL: the engine contains all proprietary methodology and server-side logic.
 # It must NEVER be pushed to a public repo. Keep it local (and on Cloudflare).
 engine/
+
+# CRITICAL: admin scripts contain the admin token (Worker secret).
+# Never commit them to public.
+admin/
+

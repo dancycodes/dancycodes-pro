@@ -6,14 +6,7 @@ Spec-driven software delivery for Claude Code. Interview → spec → implement 
 
 ## Installation
 
-### 1. Set your license key
-
-```bash
-# Add to your ~/.bashrc, ~/.zshrc, or Windows user env vars
-export DANCYCODES_LICENSE_KEY="DCP-XXXXXXXX-XXXXXXXX"
-```
-
-### 2. Install required dependencies
+### 1. Install required dependencies (one-time, per machine)
 
 DancyCodes Pro orchestrates other skills and MCP servers. You need these installed:
 
@@ -25,24 +18,42 @@ DancyCodes Pro orchestrates other skills and MCP servers. You need these install
 **Recommended:**
 - [Stitch MCP](https://stitch.tools) (Google) — enables Tier 1 UI skill generation
 
-### 3. Install the plugin
+### 2. Install the plugin
 
 In Claude Code:
 
 ```
-/plugin marketplace add dancycodes/dancycodes-pro
+/plugin marketplace add https://github.com/dancycodes/dancycodes-pro
 /plugin install dancycodes-pro
 ```
 
-Or from a local checkout:
+If Claude Code prompts for a license key during install, paste your `DCP-XXXXXXXX-XXXXXXXXXXXXXXXX` key.
+
+### 3. Configure the license key (if not auto-prompted)
+
+Claude Code's auto-prompt during `/plugin install` is unreliable across versions. If `/mcp` shows `dd-manager-proxy` as `failed`, run:
 
 ```
-/plugin install /path/to/dancycodes-pro/plugin
+/plugin config dancycodes-pro-marketplace/dancycodes-pro
 ```
 
-### 4. Install the proxy npm package
+Paste your license key, then **restart Claude Code** (close + reopen) for the MCP server to pick up the env var.
 
-The plugin's `.mcp.json` references `@dancycodes/dd-manager-proxy`. It auto-installs on first run via `npx`. No action needed — just make sure `npx` is in your PATH.
+Verify with `/mcp` — `dd-manager-proxy` should show `connected`.
+
+### 4. Diagnose key issues from the terminal (if needed)
+
+If `/mcp` still says `failed` after configuring the key, run this in your terminal for a clearer error:
+
+```bash
+DANCYCODES_LICENSE_KEY=DCP-XXXXXXXX-XXXXXXXXXXXXXXXX npx -y @dancycodesorg/dd-manager-proxy
+```
+
+The stderr output tells you which mode failed:
+- "DANCYCODES_LICENSE_KEY is not set" → the key isn't being picked up. Re-run step 3.
+- "license key looks malformed" → the key value isn't in the `DCP-XXX-XXX` format.
+- "license check failed — License not found" → the key was deleted/revoked. Email dancycodes@gmail.com.
+- "License OK (...). Connected via stdio. Ready." → key is good. Restart Claude Code.
 
 ## Usage
 
