@@ -1,6 +1,6 @@
 {
   "name": "@dancycodesorg/dd-manager-proxy",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DancyCodes Pro local MCP proxy — hosts SQLite project state locally and forwards proprietary logic calls to the DancyCodes engine. Installed automatically by the dancycodes-pro Claude Code plugin.",
   "type": "module",
   "main": "build/index.js",

@@ -11,6 +11,8 @@ const DEFAULT_ENGINE_URL = "https://dancycodes-engine.dancycodes.workers.dev/mcp
 export interface RemoteClientConfig {
   engineUrl: string;
   licenseKey: string;
+  /** v0.3.0+: machine fingerprint sent on every MCP call to enforce 1-machine binding. */
+  fingerprint?: string;
   timeoutMs?: number;
 }
 
@@ -29,8 +31,14 @@ export class RemoteClient {
     this.config = {
       engineUrl: config?.engineUrl ?? process.env.DANCYCODES_ENGINE_URL ?? DEFAULT_ENGINE_URL,
       licenseKey,
+      fingerprint: config?.fingerprint,
       timeoutMs: config?.timeoutMs ?? 30000,
     };
+  }
+
+  /** Set the machine fingerprint after construction (called by index.ts after bind succeeds). */
+  setFingerprint(fingerprint: string): void {
+    this.config.fingerprint = fingerprint;
   }
 
   private async rpc(method: string, params: unknown): Promise<unknown> {
@@ -45,15 +53,20 @@ export class RemoteClient {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+      "X-License-Key": this.config.licenseKey,
+    };
+    if (this.config.fingerprint) {
+      headers["X-Machine-Fingerprint"] = this.config.fingerprint;
+    }
+
     let response: Response;
     try {
       response = await fetch(this.config.engineUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json, text/event-stream",
-          "X-License-Key": this.config.licenseKey,
-        },
+        headers,
         body: JSON.stringify(body),
         signal: controller.signal,
       });
@@ -180,6 +193,81 @@ export class RemoteClient {
       clearTimeout(timeout);
       return { ok: false, error: (err as Error).message };
     }
+  }
+
+  /**
+   * v0.3.0 — Bind this machine's fingerprint to the license. Called once on proxy startup.
+   * Engine returns the bind result with a warning_text the proxy displays on stderr.
+   *
+   * Returns:
+   * - { ok: true, action, swaps_used_30d, swaps_remaining, warning_text } on success
+   * - { ok: false, reason: "swap_quota_exceeded" | other, hint } on failure
+   * - { ok: false, reason: "network", error } on engine unreachable
+   */
+  async bindMachine(params: {
+    fingerprint: string;
+    hostname: string;
+    os_platform: string;
+    proxy_version: string;
+  }): Promise<
+    | {
+        ok: true;
+        action: "first_bind" | "returning_machine" | "swap";
+        fingerprint: string;
+        hostname: string;
+        swaps_used_30d: number;
+        swaps_remaining: number;
+        swap_window_days: number;
+        warning_text: string;
+        plan?: string;
+        email?: string;
+      }
+    | {
+        ok: false;
+        reason: string;
+        swaps_used_30d?: number;
+        swap_window_days?: number;
+        hint?: string;
+      }
+  > {
+    const engineRoot = this.config.engineUrl.replace(/\/mcp\/?$/, "");
+    const url = `${engineRoot}/licenses/bind-machine`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-License-Key": this.config.licenseKey,
+        },
+        body: JSON.stringify(params),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeout);
+      return {
+        ok: false,
+        reason: `engine unreachable: ${(err as Error).message}`,
+      };
+    }
+    clearTimeout(timeout);
+
+    let data: Record<string, unknown>;
+    try {
+      data = (await response.json()) as Record<string, unknown>;
+    } catch {
+      return { ok: false, reason: `engine returned non-JSON (HTTP ${response.status})` };
+    }
+
+    if (response.ok && data.ok === true) {
+      return data as Awaited<ReturnType<RemoteClient["bindMachine"]>>;
+    }
+    return data as { ok: false; reason: string; hint?: string };
   }
 
   /** Call a single MCP tool on the engine and return the parsed content JSON. */

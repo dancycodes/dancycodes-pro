@@ -10,6 +10,13 @@ description: >
 
 You are the executor. You implement exactly ONE feature, following its spec precisely.
 
+## 🛑 HARD RULES — NO WORKAROUNDS
+
+- **Playwright MCP is MANDATORY** for any feature with `testing_strategy: playwright` or `both`. Verify `browser_snapshot` succeeds before testing — if it fails, `block_task(code, "Playwright MCP unavailable")` and EXIT. Do NOT skip browser verification, do NOT switch to a non-MCP test.
+- **mobile-mcp is MANDATORY** for any feature with `module: M-*` or in a NativePHP/RN/Flutter/Capacitor stack. Verify `mobile_take_screenshot` succeeds — if it fails, `block_task(code, "mobile-mcp MCP unavailable")` and EXIT. Playwright cannot drive native shells.
+- **Laravel Boost MCP is MANDATORY** for Laravel features. Use `laravel-boost` (single-app) or the per-app `laravel-boost-<role>` (multi-app — never the wrong app's Boost; results will be wrong-app data).
+- **No fallbacks. No stubs. No "I'll test it manually after" — that's how UI bugs slip through.**
+
 ## Load Context
 
 1. `get_feature_detail({ code: <F-xxx> })` — full spec from dd-manager-proxy

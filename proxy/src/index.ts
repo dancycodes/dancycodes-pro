@@ -5,13 +5,23 @@ import { registerAllLocalTools } from "./tools/index.js";
 import { RemoteClient } from "./remote/client.js";
 import { registerRemoteTools } from "./remote/tools.js";
 import { registerMethodologyTools } from "./remote/methodology-tools.js";
+import { getMachineIdentity, fingerprintShort } from "./license/fingerprint.js";
 
-const PROXY_VERSION = "0.2.0";
+const PROXY_VERSION = "0.3.0";
 
-const DD_DIR = process.env.DD_DIR;
-if (!DD_DIR) {
-  console.error("[dd-manager-proxy] FATAL: DD_DIR environment variable is required.");
-  process.exit(1);
+// DD_DIR is the directory under the project root where SQLite + recovery files
+// live. The Claude Code plugin's .mcp.json sets this to ".executor". If we
+// were spawned outside the plugin (or the plugin's env-block wasn't applied —
+// which can happen after `cd`-ing into a freshly-generated project workspace),
+// fall back to the standard ".executor" instead of failing fatally.
+const DD_DIR = process.env.DD_DIR && process.env.DD_DIR.length > 0
+  ? process.env.DD_DIR
+  : ".executor";
+if (!process.env.DD_DIR) {
+  console.error(
+    "[dd-manager-proxy] DD_DIR not set — defaulting to '.executor'. " +
+      "(Set DD_DIR explicitly if you need a different folder.)",
+  );
 }
 
 // =============================================
@@ -25,14 +35,19 @@ const rawLicenseKey = process.env.DANCYCODES_LICENSE_KEY ?? "";
 // — which means Claude Code's user_config substitution didn't fire.
 if (!rawLicenseKey || rawLicenseKey.includes("${user_config")) {
   console.error("[dd-manager-proxy] FATAL: DANCYCODES_LICENSE_KEY is not set.");
-  console.error("[dd-manager-proxy] This usually means the plugin's user config wasn't completed during install.");
   console.error("[dd-manager-proxy]");
-  console.error("[dd-manager-proxy] Fix in 2 steps:");
-  console.error("[dd-manager-proxy]   1. Get a free beta license: email dancycodes@gmail.com");
-  console.error("[dd-manager-proxy]   2. In Claude Code, run:  /plugin config dancycodes-pro-marketplace/dancycodes-pro");
-  console.error("[dd-manager-proxy]      (Or restart and re-install: /plugin install dancycodes-pro)");
+  console.error("[dd-manager-proxy] This commonly happens in two situations:");
+  console.error("[dd-manager-proxy]   (a) First-time install — the plugin's user_config prompt was skipped/dismissed.");
+  console.error("[dd-manager-proxy]   (b) AFTER Phase 3 finishes and you cd into the new project directory and start");
+  console.error("[dd-manager-proxy]       implementation. Claude Code respawns this MCP in the new workspace and");
+  console.error("[dd-manager-proxy]       the user_config sometimes does not propagate to the new spawn.");
   console.error("[dd-manager-proxy]");
-  console.error("[dd-manager-proxy] After setting the key, restart Claude Code (close + reopen) so the MCP picks up the new env.");
+  console.error("[dd-manager-proxy] Fix (works in both cases):");
+  console.error("[dd-manager-proxy]   1. In Claude Code, run:  /plugin config dancycodes-pro-marketplace/dancycodes-pro");
+  console.error("[dd-manager-proxy]      Paste your DCP-XXXXXXXX-XXXXXXXXXXXXXXXX key.");
+  console.error("[dd-manager-proxy]   2. Close Claude Code and reopen it (so the MCP picks up the new env).");
+  console.error("[dd-manager-proxy]");
+  console.error("[dd-manager-proxy] No key yet? Email dancycodes@gmail.com for a free beta license.");
   process.exit(1);
 }
 
@@ -79,7 +94,7 @@ registerAllLocalTools(server, dm);
 async function main(): Promise<void> {
   const remoteClient = new RemoteClient();
 
-  // Mode 3: ENGINE REJECTS THE KEY.
+  // Mode 3: ENGINE REJECTS THE KEY (license existence/expiry/revoke check).
   const health = await remoteClient.checkLicenseHealth();
   if (!health.ok) {
     console.error(`[dd-manager-proxy] FATAL: license check failed — ${health.reason}`);
@@ -91,6 +106,51 @@ async function main(): Promise<void> {
   console.error(
     `[dd-manager-proxy] License OK (${health.plan} plan, ${health.email}). Proxy v${PROXY_VERSION}.`,
   );
+
+  // ============================================================
+  // v0.3.0: Machine fingerprint binding.
+  // Every license — free admin-issued or paid Pro — is bound to ONE machine.
+  // 2 self-service swaps per rolling 30 days, then admin-terminal unblock required.
+  // ============================================================
+  const identity = getMachineIdentity();
+  console.error(
+    `[dd-manager-proxy] Machine identity: ${identity.hostname} (fp ${fingerprintShort(identity.fingerprint)}…) [${identity.os_platform}]`,
+  );
+
+  const bind = await remoteClient.bindMachine({
+    fingerprint: identity.fingerprint,
+    hostname: identity.hostname,
+    os_platform: identity.os_platform,
+    proxy_version: PROXY_VERSION,
+  });
+
+  if (!bind.ok) {
+    console.error(`[dd-manager-proxy] FATAL: machine binding rejected — ${bind.reason}`);
+    if ("hint" in bind && bind.hint) {
+      console.error(`[dd-manager-proxy] ${bind.hint}`);
+    }
+    if (bind.reason === "swap_quota_exceeded") {
+      console.error("[dd-manager-proxy]");
+      console.error("[dd-manager-proxy] Your license is bound to a different machine and you've");
+      console.error(`[dd-manager-proxy] used all ${bind.swap_window_days ?? 30}-day swap quota.`);
+      console.error("[dd-manager-proxy] Email dancycodes@gmail.com to unblock.");
+    } else {
+      console.error("[dd-manager-proxy]");
+      console.error("[dd-manager-proxy] Common causes: license invalid/expired, engine unreachable.");
+      console.error("[dd-manager-proxy] Verify with: npx -y -p @dancycodesorg/dd-manager-proxy dancycodes-check-license");
+    }
+    process.exit(1);
+  }
+
+  // Print the prominent warning banner returned by the engine.
+  console.error("");
+  for (const line of bind.warning_text.split("\n")) {
+    console.error(`[dd-manager-proxy] ${line}`);
+  }
+  console.error("");
+
+  // Tell the RemoteClient to include the fingerprint header on every MCP tool call.
+  remoteClient.setFingerprint(identity.fingerprint);
 
   // Engine version sanity check (non-fatal — just warn).
   const meta = await remoteClient.getEngineMeta();
